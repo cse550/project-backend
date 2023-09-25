@@ -1,7 +1,6 @@
 package com.cse550.projectbackend.user.service;
 
 import com.cse550.projectbackend.user.model.User;
-import com.cse550.projectbackend.user.service.UserService;
 import org.springframework.stereotype.Service;
 
 @Service
