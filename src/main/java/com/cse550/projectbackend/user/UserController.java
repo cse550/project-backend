@@ -3,11 +3,11 @@ package com.cse550.projectbackend.user;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -17,8 +17,18 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/user")
-    public User createUser(@RequestBody User user) {
-        return userService.saveUser(user);
+    @PostMapping
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        return ResponseEntity.ok(userService.saveUser(user));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<User> deleteUser(@PathVariable String id) {
+        return ResponseEntity.ok(userService.deleteUser(id));
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUser(@PathVariable String id) {
+        return ResponseEntity.ok(userService.getUser(id));
+    }
+
 }
