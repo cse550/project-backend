@@ -35,7 +35,7 @@ public class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.userID").value("testId"));
 
         verify(userService, times(1)).saveUser(any(User.class));

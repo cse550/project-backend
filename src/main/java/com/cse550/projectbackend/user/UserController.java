@@ -3,6 +3,7 @@ package com.cse550.projectbackend.user;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,16 +20,16 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.saveUser(user));
+        return new ResponseEntity<>(userService.saveUser(user), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<User> deleteUser(@PathVariable String id) {
-        return ResponseEntity.ok(userService.deleteUser(id));
+        return new ResponseEntity<>(userService.deleteUser(id), HttpStatus.OK);
     }
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable String id) {
-        return ResponseEntity.ok(userService.getUser(id));
+        return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
     }
 
 }
