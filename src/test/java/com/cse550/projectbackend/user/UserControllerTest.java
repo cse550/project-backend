@@ -32,7 +32,7 @@ public class UserControllerTest {
 
         when(userService.saveUser(any(User.class))).thenReturn(user);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/user")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isCreated())
@@ -42,10 +42,9 @@ public class UserControllerTest {
     }
 
 
-    @Test
+  @Test
     public void testDeleteUser() throws Exception {
         String existingUserId = "testId";
-
         doNothing().when(userService).deleteUser(existingUserId);
 
         mockMvc.perform(delete("/users/{id}", existingUserId))
@@ -62,7 +61,7 @@ public class UserControllerTest {
 
         when(userService.getUser("testId")).thenReturn(user);
 
-        mockMvc.perform(get("/users/testId"))
+        mockMvc.perform(get("/user/testId"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userID").value("testId"));
 

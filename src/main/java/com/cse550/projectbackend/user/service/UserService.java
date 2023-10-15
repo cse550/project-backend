@@ -23,6 +23,7 @@ public class UserService {
         try {
             user.setCreatedAt(Instant.now());
             user.setUserID(UUID.randomUUID().toString());
+            log.info("User created with id {} at {}", user.getUserID(), user.getCreatedAt());
             return userRepository.save(user);
         } catch (DataAccessException e) {
             log.error("Error when saving user: ", e);
@@ -40,6 +41,7 @@ public class UserService {
 
         User user = userOptional.get();
         try {
+            log.info("Deleting User with id {}", user.getUserID());
             userRepository.delete(user);
             log.info("Successfully deleted User with id {}", user.getUserID());
         } catch (DataAccessException e) {
