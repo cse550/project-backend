@@ -24,12 +24,22 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<User> deleteUser(@PathVariable String id) {
-        return new ResponseEntity<>(userService.deleteUser(id), HttpStatus.OK);
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable String id) {
         return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
+    }
+
+    @PostMapping("/{userId}/follow/{followedUserId}")
+    public ResponseEntity<User> followUser(
+            @PathVariable String userId,
+            @PathVariable String followedUserId
+    ) {
+        User user = userService.followUser(userId, followedUserId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
 }
