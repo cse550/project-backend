@@ -45,6 +45,7 @@ public class UserControllerTest {
     @Test
     public void testDeleteUser() throws Exception {
         String existingUserId = "testId";
+
         doNothing().when(userService).deleteUser(existingUserId);
 
         mockMvc.perform(delete("/user/{id}", existingUserId))
@@ -52,6 +53,7 @@ public class UserControllerTest {
 
         verify(userService, times(1)).deleteUser(existingUserId);
     }
+
 
 
     @Test
