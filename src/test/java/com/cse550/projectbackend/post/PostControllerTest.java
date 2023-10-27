@@ -31,7 +31,7 @@ public class PostControllerTest {
     void setUp() {
         testPost = new Post();
         testPost.setPostId("1");
-        testPost.setUserID("user1");
+        testPost.setUserId("user1");
         testPost.setContent("Test content");
         testPost.setLikeCount(0);
         testPost.setTimestamp(Instant.now());
@@ -43,7 +43,7 @@ public class PostControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/post")
-                        .content("{\"userID\": \"user1\", \"content\": \"Test content\"}")
+                        .content("{\"userId\": \"user1\", \"content\": \"Test content\"}")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.postId").value("1"));
@@ -58,7 +58,7 @@ public class PostControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.postId").value("1"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.userID").value("user1"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.userId").value("user1"));
     }
 
     @Test

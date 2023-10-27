@@ -22,8 +22,8 @@ public class UserService {
     public User saveUser(User user) {
         try {
             user.setCreatedAt(Instant.now());
-            user.setUserID(UUID.randomUUID().toString());
-            log.info("User created with id {} at {}", user.getUserID(), user.getCreatedAt());
+            user.setUserId(UUID.randomUUID().toString());
+            log.info("User created with id {} at {}", user.getUserId(), user.getCreatedAt());
             return userRepository.save(user);
         } catch (DataAccessException e) {
             log.error("Error when saving user: ", e);
@@ -41,9 +41,9 @@ public class UserService {
 
         User user = userOptional.get();
         try {
-            log.info("Deleting User with id {}", user.getUserID());
+            log.info("Deleting User with id {}", user.getUserId());
             userRepository.delete(user);
-            log.info("Successfully deleted User with id {}", user.getUserID());
+            log.info("Successfully deleted User with id {}", user.getUserId());
         } catch (DataAccessException e) {
             log.error("Error when deleting user with id {}: ", userId, e);
             throw new RuntimeException("Failed to delete user", e);
