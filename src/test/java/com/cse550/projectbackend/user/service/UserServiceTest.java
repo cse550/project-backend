@@ -32,12 +32,12 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         testUser = new User();
-        testUser.setUserID("1");
+        testUser.setUserId("1");
         testUser.setUsername("user1");
         testUser.setEmail("user1@example.com");
 
         testFollowedUser = new User();
-        testFollowedUser.setUserID("2");
+        testFollowedUser.setUserId("2");
         testFollowedUser.setUsername("user2");
         testFollowedUser.setEmail("user2@example.com");
     }
@@ -49,14 +49,14 @@ class UserServiceTest {
 
         User savedUser = userService.saveUser(user);
 
-        assertNotNull(savedUser.getUserID()); // since a UUID is set on saving
+        assertNotNull(savedUser.getUserId()); // since a UUID is set on saving
         verify(userRepository, times(1)).save(user);
     }
 
     @Test
     void testDeleteUser_existingUser() {
         User user = new User();
-        user.setUserID("testId");
+        user.setUserId("testId");
 
         when(userRepository.findById("testId")).thenReturn(Optional.of(user));
 
@@ -80,13 +80,13 @@ class UserServiceTest {
     @Test
     void testGetUser_existingUser() {
         User user = new User();
-        user.setUserID("testId");
+        user.setUserId("testId");
 
         when(userRepository.findById("testId")).thenReturn(Optional.of(user));
 
         User foundUser = userService.getUser("testId");
 
-        assertEquals("testId", foundUser.getUserID());
+        assertEquals("testId", foundUser.getUserId());
         verify(userRepository, times(1)).findById("testId");
     }
 
