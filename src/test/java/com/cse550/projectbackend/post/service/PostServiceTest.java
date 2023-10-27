@@ -3,6 +3,8 @@ package com.cse550.projectbackend.post.service;
 import com.cse550.projectbackend.post.error.PostNotFoundException;
 import com.cse550.projectbackend.post.model.Post;
 import com.cse550.projectbackend.post.repository.PostRepository;
+import com.cse550.projectbackend.user.model.User;
+import com.cse550.projectbackend.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +14,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +26,9 @@ public class PostServiceTest {
 
     @Mock
     private PostRepository postRepository;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private PostService postService;
@@ -81,15 +86,51 @@ public class PostServiceTest {
     }
 
     @Test
-    public void testGetAllPosts() {
-        List<Post> testPosts = new ArrayList<>();
-        testPosts.add(testPost);
+    public void getPostByIdReturnsPostWhenFound() {
+        String postId = "someId";
+        Post post = new Post();
+        post.setPostId(postId);
+        Mockito.when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
-        Mockito.when(postRepository.findAll()).thenReturn(testPosts);
+        Post result = postService.getPostById(postId);
 
-        List<Post> allPosts = postService.getAllPosts();
+        assertEquals(post, result);
+    }
 
-        assertNotNull(allPosts);
-        assertEquals(1, allPosts.size());
+    @Test
+    public void getPostByIdThrowsExceptionWhenNotFound() {
+        String postId = "someId";
+        Mockito.when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        assertThrows(PostNotFoundException.class, () -> postService.getPostById(postId));
+    }
+
+    @Test
+    public void getFeedPostsByUserIdTest() {
+        User user1 = new User();
+        user1.setUserID("user1Id");
+
+        User user2 = new User();
+        user2.setUserID("user2Id");
+        user2.setFollowing(List.of(user1));
+
+        Post post1 = createPost("post1Id", "user1Id", Instant.now().minusSeconds(10));
+        Post post2 = createPost("post2Id", "user1Id", Instant.now().minusSeconds(5));
+
+        Mockito.when(userService.getUser("user2Id")).thenReturn(user2);
+        Mockito.when(postRepository.findByUserIdIn(List.of("user1Id"))).thenReturn(Arrays.asList(post1, post2));
+
+        List<Post> feedPosts = postService.getFeedPostsByUserId("user2Id");
+        assertEquals(2, feedPosts.size());
+        assertEquals("post2Id", feedPosts.get(0).getPostId());
+        assertEquals("post1Id", feedPosts.get(1).getPostId());
+    }
+
+    private Post createPost(String postId, String userId, Instant timestamp) {
+        Post post = new Post();
+        post.setPostId(postId);
+        post.setUserID(userId);
+        post.setTimestamp(timestamp);
+        return post;
     }
 }

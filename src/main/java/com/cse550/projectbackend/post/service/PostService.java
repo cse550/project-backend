@@ -3,15 +3,18 @@ package com.cse550.projectbackend.post.service;
 import com.cse550.projectbackend.post.error.PostNotFoundException;
 import com.cse550.projectbackend.post.model.Post;
 import com.cse550.projectbackend.post.repository.PostRepository;
+import com.cse550.projectbackend.user.model.User;
+import com.cse550.projectbackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,11 +23,13 @@ public class PostService {
 
     private final PostRepository postRepository;
 
+    private final UserService userService;
+
     public Post createPost(Post post) {
         try {
             post.setPostId(UUID.randomUUID().toString());
             post.setTimestamp(Instant.now());
-            postRepository.save(post);
+            post = postRepository.save(post);
             return post;
         } catch (DataAccessException e) {
             log.error("Error when creating a new post: ", e);
@@ -33,20 +38,11 @@ public class PostService {
     }
 
     public Post getPostById(String postId) {
-        Optional<Post> postOptional = postRepository.findById(postId);
-        if (postOptional.isEmpty()) {
-            log.error("Post with id {} not found", postId);
-            throw new PostNotFoundException(postId);
-        }
-        return postOptional.get();
+        return getPostOrThrow(postId);
     }
 
     public void deletePost(String postId) {
-        Optional<Post> postOptional = postRepository.findById(postId);
-        if (postOptional.isEmpty()) {
-            log.error("Post with id {} not found", postId);
-            throw new PostNotFoundException(postId);
-        }
+        getPostOrThrow(postId);
 
         try {
             postRepository.deleteById(postId);
@@ -56,7 +52,23 @@ public class PostService {
         }
     }
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public List<Post> getFeedPostsByUserId(String userId) {
+        User user = userService.getUser(userId);
+
+        List<String> followingIds = user.getFollowing().stream()
+                .map(User::getUserID)
+                .collect(Collectors.toList());
+
+        return postRepository.findByUserIdIn(followingIds)
+                .stream()
+                .sorted(Comparator.comparing(Post::getTimestamp).reversed())
+                .collect(Collectors.toList());
+    }
+
+    private Post getPostOrThrow(String postId) {
+        return postRepository.findById(postId).orElseThrow(() -> {
+            log.error("Post with id {} not found", postId);
+            return new PostNotFoundException(postId);
+        });
     }
 }
