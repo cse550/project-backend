@@ -2,6 +2,8 @@ package com.cse550.projectbackend.post;
 
 import com.cse550.projectbackend.post.error.PostNotFoundException;
 import com.cse550.projectbackend.post.model.Post;
+import com.cse550.projectbackend.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,16 +11,14 @@ import org.springframework.web.bind.annotation.*;
 
 import com.cse550.projectbackend.post.service.PostService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/post")
+@RequiredArgsConstructor
 public class PostController {
 
     private final PostService postService;
-
-    @Autowired
-    public PostController(PostService postService) {
-        this.postService = postService;
-    }
 
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Post post) {
@@ -45,5 +45,11 @@ public class PostController {
         } catch (PostNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/feed/{userId}")
+    public ResponseEntity<List<Post>> getUserFeed(@PathVariable String userId) {
+        List<Post> feedPosts = postService.getFeedPostsByUserId(userId);
+        return ResponseEntity.ok(feedPosts);
     }
 }
