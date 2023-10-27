@@ -41,19 +41,18 @@ public class UserControllerTest {
         verify(userService, times(1)).saveUser(any(User.class));
     }
 
-    @Test
+
+  @Test
     public void testDeleteUser() throws Exception {
-        User user = new User();
-        user.setUserID("testId");
+        String existingUserId = "testId";
+        doNothing().when(userService).deleteUser(existingUserId);
 
-        when(userService.deleteUser("testId")).thenReturn(user);
+        mockMvc.perform(delete("/users/{id}", existingUserId))
+                .andExpect(status().isNoContent());
 
-        mockMvc.perform(delete("/user/testId"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userID").value("testId"));
-
-        verify(userService, times(1)).deleteUser("testId");
+        verify(userService, times(1)).deleteUser(existingUserId);
     }
+
 
     @Test
     public void testGetUser() throws Exception {
