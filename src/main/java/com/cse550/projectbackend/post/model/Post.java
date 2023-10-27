@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Post {
     @Id
     private String postId;
-    private String userID;
+    private String userId;
     private String content;
     private int likeCount;
     private Instant timestamp;

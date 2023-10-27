@@ -38,7 +38,7 @@ public class PostServiceTest {
     @BeforeEach
     void setUp() {
         testPost = new Post();
-        testPost.setUserID("user1");
+        testPost.setUserId("user1");
         testPost.setContent("Test content");
         testPost.setLikeCount(0);
         testPost.setTimestamp(Instant.now());
@@ -51,7 +51,7 @@ public class PostServiceTest {
         Post createdPost = postService.createPost(testPost);
 
         assertNotNull(createdPost);
-        assertEquals("user1", createdPost.getUserID());
+        assertEquals("user1", createdPost.getUserId());
     }
 
     @Test
@@ -108,10 +108,10 @@ public class PostServiceTest {
     @Test
     public void getFeedPostsByUserIdTest() {
         User user1 = new User();
-        user1.setUserID("user1Id");
+        user1.setUserId("user1Id");
 
         User user2 = new User();
-        user2.setUserID("user2Id");
+        user2.setUserId("user2Id");
         user2.setFollowing(List.of(user1));
 
         Post post1 = createPost("post1Id", "user1Id", Instant.now().minusSeconds(10));
@@ -129,7 +129,7 @@ public class PostServiceTest {
     private Post createPost(String postId, String userId, Instant timestamp) {
         Post post = new Post();
         post.setPostId(postId);
-        post.setUserID(userId);
+        post.setUserId(userId);
         post.setTimestamp(timestamp);
         return post;
     }

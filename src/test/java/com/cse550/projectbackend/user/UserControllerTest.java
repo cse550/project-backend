@@ -28,7 +28,7 @@ public class UserControllerTest {
     @Test
     public void testCreateUser() throws Exception {
         User user = new User();
-        user.setUserID("testId");
+        user.setUserId("testId");
 
         when(userService.saveUser(any(User.class))).thenReturn(user);
 
@@ -36,7 +36,7 @@ public class UserControllerTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userID").value("testId"));
+                .andExpect(jsonPath("$.userId").value("testId"));
 
         verify(userService, times(1)).saveUser(any(User.class));
     }
@@ -45,6 +45,7 @@ public class UserControllerTest {
     @Test
     public void testDeleteUser() throws Exception {
         String existingUserId = "testId";
+
         doNothing().when(userService).deleteUser(existingUserId);
 
         mockMvc.perform(delete("/user/{id}", existingUserId))
@@ -54,16 +55,17 @@ public class UserControllerTest {
     }
 
 
+
     @Test
     public void testGetUser() throws Exception {
         User user = new User();
-        user.setUserID("testId");
+        user.setUserId("testId");
 
         when(userService.getUser("testId")).thenReturn(user);
 
         mockMvc.perform(get("/user/testId"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userID").value("testId"));
+                .andExpect(jsonPath("$.userId").value("testId"));
 
         verify(userService, times(1)).getUser("testId");
     }
