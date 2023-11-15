@@ -5,25 +5,30 @@ import com.cse550.projectbackend.post.model.Post;
 import com.cse550.projectbackend.post.service.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-@WebMvcTest(PostController.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class PostControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private PostService postService;
+
+    @InjectMocks
+    private PostController postController;
 
     private Post testPost;
 
@@ -38,54 +43,68 @@ public class PostControllerTest {
     }
 
     @Test
-    public void testCreatePost() throws Exception {
-        Mockito.when(postService.createPost(Mockito.any(Post.class))).thenReturn(testPost);
+    public void testCreatePost() {
+        when(postService.createPost(any(Post.class))).thenReturn(testPost);
 
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/post")
-                        .content("{\"userId\": \"user1\", \"content\": \"Test content\"}")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.postId").value("1"));
+        ResponseEntity<Post> response = postController.createPost(testPost);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("1", Objects.requireNonNull(response.getBody()).getPostId());
+        verify(postService, times(1)).createPost(any(Post.class));
+    }
+    @Test
+    public void testGetPostById() throws PostNotFoundException {
+        when(postService.getPostById("1")).thenReturn(testPost);
+
+        ResponseEntity<Post> response = postController.getPostById("1");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("1", Objects.requireNonNull(response.getBody()).getPostId());
+        verify(postService, times(1)).getPostById("1");
     }
 
     @Test
-    public void testGetPostById() throws Exception {
-        Mockito.when(postService.getPostById("1")).thenReturn(testPost);
+    public void testGetPostByIdNotFound() throws PostNotFoundException {
+        when(postService.getPostById("2")).thenThrow(PostNotFoundException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/post/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.postId").value("1"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.userId").value("user1"));
+        ResponseEntity<Post> response = postController.getPostById("2");
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(postService, times(1)).getPostById("2");
     }
 
     @Test
-    public void testGetPostByIdNotFound() throws Exception {
-        Mockito.when(postService.getPostById("2")).thenThrow(PostNotFoundException.class);
+    public void testDeletePost() throws PostNotFoundException {
+        doNothing().when(postService).deletePost("1");
 
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/post/2")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+        ResponseEntity<Void> response = postController.deletePost("1");
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(postService, times(1)).deletePost("1");
     }
 
     @Test
-    public void testDeletePost() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/post/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNoContent());
+    public void testDeletePostNotFound() throws PostNotFoundException {
+        doThrow(PostNotFoundException.class).when(postService).deletePost("2");
+
+        ResponseEntity<Void> response = postController.deletePost("2");
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(postService, times(1)).deletePost("2");
     }
 
     @Test
-    public void testDeletePostNotFound() throws Exception {
-        Mockito.doThrow(PostNotFoundException.class).when(postService).deletePost("2");
+    public void testGetUserFeed() {
+        List<Post> feed = new ArrayList<>();
+        feed.add(testPost);
 
-        mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/post/2")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+        when(postService.getFeedPostsByUserId("user1")).thenReturn(feed);
+
+        ResponseEntity<List<Post>> response = postController.getUserFeed("user1");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, Objects.requireNonNull(response.getBody()).size());
+        assertEquals("1", response.getBody().get(0).getPostId());
+        verify(postService, times(1)).getFeedPostsByUserId("user1");
     }
 }

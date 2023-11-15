@@ -56,7 +56,7 @@ public class PostService {
         User user = userService.getUser(userId);
 
         List<String> followingIds = user.getFollowing().stream()
-                .map(User::getUserId)
+                .map(User::getId)
                 .collect(Collectors.toList());
 
         return postRepository.findByUserIdIn(followingIds)

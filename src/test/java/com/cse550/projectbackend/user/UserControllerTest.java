@@ -1,73 +1,89 @@
 package com.cse550.projectbackend.user;
 
+import com.cse550.projectbackend.user.model.CreateUserRequest;
+import com.cse550.projectbackend.user.model.LoginRequest;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.util.Objects;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(UserController.class)
+@ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private UserService userService;
+    @InjectMocks
+    private UserController userController;
 
-    @Test
-    public void testCreateUser() throws Exception {
-        User user = new User();
-        user.setUserId("testId");
+    private User testUser;
 
-        when(userService.saveUser(any(User.class))).thenReturn(user);
-
-        mockMvc.perform(post("/user")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userId").value("testId"));
-
-        verify(userService, times(1)).saveUser(any(User.class));
+    @BeforeEach
+    void setup() {
+        testUser = new User();
+        testUser.setId("test");
+        testUser.setUsername("test");
+        testUser.setPasswordHash("password");
     }
 
-
     @Test
-    public void testDeleteUser() throws Exception {
-        String existingUserId = "testId";
+    public void testCreateUser() {
+        CreateUserRequest createUserRequest = new CreateUserRequest();
 
-        doNothing().when(userService).deleteUser(existingUserId);
+        when(userService.createUser(any(CreateUserRequest.class))).thenReturn(testUser);
 
-        mockMvc.perform(delete("/user/{id}", existingUserId))
-                .andExpect(status().isNoContent());
+        ResponseEntity<User> response = userController.createUser(createUserRequest);
 
-        verify(userService, times(1)).deleteUser(existingUserId);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("test", Objects.requireNonNull(response.getBody()).getId());
+
+        verify(userService, times(1)).createUser(any(CreateUserRequest.class));
     }
 
-
-
     @Test
-    public void testGetUser() throws Exception {
-        User user = new User();
-        user.setUserId("testId");
+    public void testDeleteUser() {
 
-        when(userService.getUser("testId")).thenReturn(user);
+        doNothing().when(userService).deleteUser(testUser.getId());
 
-        mockMvc.perform(get("/user/testId"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value("testId"));
+        ResponseEntity<Void> response = userController.deleteUser(testUser.getId());
 
-        verify(userService, times(1)).getUser("testId");
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        verify(userService, times(1)).deleteUser(testUser.getId());
     }
 
+    @Test
+    public void testFollowUser() {
+
+        when(userService.followUser(anyString(), anyString())).thenReturn(testUser);
+
+        ResponseEntity<User> response = userController.followUser("test", "followedUserId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("test", Objects.requireNonNull(response.getBody()).getId());
+        verify(userService, times(1)).followUser("test", "followedUserId");
+    }
+
+    @Test
+    public void testLoginUser() {
+        LoginRequest loginRequest = new LoginRequest();
+
+        when(userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword())).thenReturn(testUser);
+
+        ResponseEntity<User> response = userController.loginUser(loginRequest);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("test", Objects.requireNonNull(response.getBody()).getId());
+
+        verify(userService, times(1)).loginUser(loginRequest.getUsername(), loginRequest.getPassword());
+    }
 }

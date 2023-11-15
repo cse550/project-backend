@@ -1,5 +1,7 @@
 package com.cse550.projectbackend.user;
 
+import com.cse550.projectbackend.user.model.CreateUserRequest;
+import com.cse550.projectbackend.user.model.LoginRequest;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
 
@@ -20,18 +22,15 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return new ResponseEntity<>(userService.saveUser(user), HttpStatus.CREATED);
+    public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
+        User newUser = userService.createUser(createUserRequest);
+        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
-    }
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable String id) {
-        return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
     }
 
     @PostMapping("/{userId}/follow/{followedUserId}")
@@ -40,6 +39,12 @@ public class UserController {
             @PathVariable String followedUserId
     ) {
         User user = userService.followUser(userId, followedUserId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<User> loginUser(@RequestBody LoginRequest loginRequest) {
+        User user = userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword());
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
