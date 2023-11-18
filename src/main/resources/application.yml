@@ -6,3 +6,6 @@ spring:
       authentication-database: admin
       username: root
       password: password
+token:
+  jwtSecret: ${JWT_SECRET}
+  jwtExpirationMs: 3600000

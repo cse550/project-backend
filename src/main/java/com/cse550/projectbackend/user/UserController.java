@@ -1,5 +1,10 @@
 package com.cse550.projectbackend.user;
 
+import com.cse550.projectbackend.token.JwtResponse;
+import com.cse550.projectbackend.user.error.BadCredentialsException;
+import com.cse550.projectbackend.user.error.UserNotFoundException;
+import com.cse550.projectbackend.user.model.CreateUserRequest;
+import com.cse550.projectbackend.user.model.LoginRequest;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
 
@@ -20,18 +25,15 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return new ResponseEntity<>(userService.saveUser(user), HttpStatus.CREATED);
+    public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
+        User newUser = userService.createUser(createUserRequest);
+        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
-    }
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable String id) {
-        return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
     }
 
     @PostMapping("/{userId}/follow/{followedUserId}")
@@ -41,6 +43,18 @@ public class UserController {
     ) {
         User user = userService.followUser(userId, followedUserId);
         return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        try {
+            String token = userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword());
+            return ResponseEntity.ok(new JwtResponse(token));
+        } catch (BadCredentialsException | UserNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
     }
 
 }

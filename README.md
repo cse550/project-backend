@@ -54,3 +54,37 @@ Follow these steps to run the application using Docker Compose:
     ```bash
     docker rmi project-backend
     ```
+# Setting up JaCoCo Code Coverage Reporting with Maven
+
+JaCoCo is a Java Code Coverage library that helps measure and report code coverage in Java projects.
+The project is currently set up to exclude any file in the error or model folders.
+
+- [JaCoCo documentation](https://www.jacoco.org/jacoco/trunk/index.html) - Documentation for JaCoCo usage
+
+- [Maven](https://maven.apache.org/download.cgi) - Before you begin, make sure you have maven installed:
+
+
+### Generating a report
+to generate a report run the following command
+```bash
+mvn clean verify jacoco:report
+```
+After running the command, you can view the code coverage reports by opening the generated HTML files in your web browser. 
+
+The main report can be found at: ```target/site/jacoco/index.html```
+
+## PIT Mutation Testing
+
+PIT is a state-of-the-art tool for mutation testing in Java. Mutation testing is a technique to assess the quality of your unit tests by introducing small modifications (mutations) in your source code and then checking if the tests detect these changes. PIT helps in identifying untested portions of your code and improves the overall robustness of your tests.
+
+### Generating PIT Reports
+
+To generate a PIT report, you can use the following bash command:
+
+```bash
+mvn pitest:mutationCoverage pitest:report
+```
+
+after the analysis is complete, PIT generates reports in the ```target/pit-reports/index.html``` directory
+These reports provide detailed insights into the code coverage and the effectiveness of the unit tests.
+
