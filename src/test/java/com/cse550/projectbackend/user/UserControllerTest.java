@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -76,13 +77,16 @@ public class UserControllerTest {
     @Test
     public void testLoginUser() {
         LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername("user");
+        loginRequest.setPassword("password");
 
-        when(userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword())).thenReturn(testUser);
+        String mockToken = "mockJwtToken";
+        when(userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword())).thenReturn(mockToken);
 
-        ResponseEntity<User> response = userController.loginUser(loginRequest);
+        ResponseEntity<?> response = userController.loginUser(loginRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("test", Objects.requireNonNull(response.getBody()).getId());
+        assertNotNull(response.getBody());
 
         verify(userService, times(1)).loginUser(loginRequest.getUsername(), loginRequest.getPassword());
     }

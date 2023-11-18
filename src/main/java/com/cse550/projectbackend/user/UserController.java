@@ -1,5 +1,8 @@
 package com.cse550.projectbackend.user;
 
+import com.cse550.projectbackend.token.JwtResponse;
+import com.cse550.projectbackend.user.error.BadCredentialsException;
+import com.cse550.projectbackend.user.error.UserNotFoundException;
 import com.cse550.projectbackend.user.model.CreateUserRequest;
 import com.cse550.projectbackend.user.model.LoginRequest;
 import com.cse550.projectbackend.user.model.User;
@@ -43,9 +46,15 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<User> loginUser(@RequestBody LoginRequest loginRequest) {
-        User user = userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword());
-        return new ResponseEntity<>(user, HttpStatus.OK);
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        try {
+            String token = userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword());
+            return ResponseEntity.ok(new JwtResponse(token));
+        } catch (BadCredentialsException | UserNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.cse550.projectbackend.user.service;
 
+import com.cse550.projectbackend.token.JwtTokenProvider;
 import com.cse550.projectbackend.user.error.BadCredentialsException;
 import com.cse550.projectbackend.user.error.UserNotFoundException;
 import com.cse550.projectbackend.user.model.CreateUserRequest;
@@ -23,6 +24,8 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    private final JwtTokenProvider jwtTokenProvider;
 
     public User createUser(CreateUserRequest createUserRequest) {
         try {
@@ -61,12 +64,12 @@ public class UserService {
         }
     }
 
-    public User loginUser(String username, String password) {
+    public String loginUser(String username, String password) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("could not find username of " + username));
 
         if (new BCryptPasswordEncoder().matches(password, user.getPasswordHash())) {
-            return user;
+            return jwtTokenProvider.generateToken(user);
         } else {
             throw new BadCredentialsException("Invalid username or password");
         }

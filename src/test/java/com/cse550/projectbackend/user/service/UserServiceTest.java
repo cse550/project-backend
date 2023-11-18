@@ -1,5 +1,6 @@
 package com.cse550.projectbackend.user.service;
 
+import com.cse550.projectbackend.token.JwtTokenProvider;
 import com.cse550.projectbackend.user.error.BadCredentialsException;
 import com.cse550.projectbackend.user.error.UserNotFoundException;
 import com.cse550.projectbackend.user.model.CreateUserRequest;
@@ -27,12 +28,14 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+
     @InjectMocks
     private UserService userService;
 
     private User testUser;
     private User testFollowedUser;
-
     private CreateUserRequest createUserRequest;
 
     @BeforeEach
@@ -142,16 +145,15 @@ class UserServiceTest {
     void testLoginUserWithValidPassword() {
         String password = "testPassword";
         String encodedPassword = new BCryptPasswordEncoder().encode(password);
-
         testUser.setPasswordHash(encodedPassword);
 
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(testUser));
+        when(jwtTokenProvider.generateToken(any(User.class))).thenReturn("mockedJwtToken");
 
-        User resultUser = userService.loginUser(testUser.getUsername(), password);
+        String token = userService.loginUser(testUser.getUsername(), password);
 
-        assertNotNull(resultUser);
-        assertEquals(testUser.getUsername(), resultUser.getUsername());
-        assertEquals("user1@example.com", resultUser.getEmail());
+        assertNotNull(token);
+
     }
 
 
