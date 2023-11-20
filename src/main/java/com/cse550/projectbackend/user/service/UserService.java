@@ -27,7 +27,7 @@ public class UserService {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    public User createUser(CreateUserRequest createUserRequest) {
+    public String createUser(CreateUserRequest createUserRequest) {
         try {
             User newUser = new User();
             newUser.setUsername(createUserRequest.getUsername());
@@ -38,7 +38,8 @@ public class UserService {
             newUser.setId(UUID.randomUUID().toString());
 
             log.info("User created with id {} at {}", newUser.getId(), newUser.getCreatedAt());
-            return userRepository.save(newUser);
+            userRepository.save(newUser);
+            return jwtTokenProvider.generateToken(newUser);
         } catch (DataAccessException e) {
             log.error("Error when saving user: ", e);
             throw new RuntimeException("Failed to save user", e);
