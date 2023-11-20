@@ -30,6 +30,7 @@ public class PostService {
             post.setPostId(UUID.randomUUID().toString());
             post.setTimestamp(Instant.now());
             post = postRepository.save(post);
+            log.info("Post created at {}", post.getTimestamp());
             return post;
         } catch (DataAccessException e) {
             log.error("Error when creating a new post: ", e);

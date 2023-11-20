@@ -16,6 +16,7 @@ public class User {
     private String id;
     @Indexed(unique = true)
     private String username;
+    @Indexed(unique = true)
     private String email;
     private String passwordHash;
     private Instant createdAt;
