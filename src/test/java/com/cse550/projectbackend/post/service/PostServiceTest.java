@@ -107,12 +107,9 @@ public class PostServiceTest {
 
     @Test
     public void getFeedPostsByUserIdTest() {
-        User user1 = new User();
-        user1.setId("user1Id");
-
         User user2 = new User();
         user2.setId("user2Id");
-        user2.setFollowing(List.of(user1));
+        user2.setFollowing(List.of("user1Id")); // Assuming 'following' is a list of user IDs
 
         Post post1 = createPost("post1Id", "user1Id", Instant.now().minusSeconds(10));
         Post post2 = createPost("post2Id", "user1Id", Instant.now().minusSeconds(5));

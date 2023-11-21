@@ -20,5 +20,5 @@ public class User {
     private String email;
     private String passwordHash;
     private Instant createdAt;
-    private List<User> following;
+    private List<String> following;
 }

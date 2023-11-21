@@ -56,9 +56,7 @@ public class PostService {
     public List<Post> getFeedPostsByUserId(String userId) {
         User user = userService.getUser(userId);
 
-        List<String> followingIds = user.getFollowing().stream()
-                .map(User::getId)
-                .collect(Collectors.toList());
+        List<String> followingIds = user.getFollowing();
 
         return postRepository.findByUserIdIn(followingIds)
                 .stream()

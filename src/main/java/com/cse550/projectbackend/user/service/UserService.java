@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ public class UserService {
             newUser.setEmail(createUserRequest.getEmail());
             newUser.setPasswordHash(new BCryptPasswordEncoder().encode(createUserRequest.getPassword()));
             newUser.setFollowing(new ArrayList<>());
+            newUser.getFollowing().add(newUser.getId());
             newUser.setCreatedAt(Instant.now());
             newUser.setId(UUID.randomUUID().toString());
 
@@ -82,17 +84,15 @@ public class UserService {
             throw new UserNotFoundException(userId);
         }
 
-        Optional<User> followedUserOptional = userRepository.findById(followedUserId);
-        if (followedUserOptional.isEmpty()) {
+        if (userRepository.findById(followedUserId).isEmpty()) {
             throw new UserNotFoundException("could not find user id of " + followedUserId);
         }
 
         User user = userOptional.get();
-        User followedUser = followedUserOptional.get();
 
-        if (!user.getFollowing().contains(followedUser)) {
-            user.getFollowing().add(followedUser);
-
+        List<String> followingIds = user.getFollowing();
+        if (!followingIds.contains(followedUserId)) {
+            followingIds.add(followedUserId);
             try {
                 userRepository.save(user);
                 return user;
