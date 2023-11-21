@@ -31,13 +31,13 @@ public class UserService {
     public String createUser(CreateUserRequest createUserRequest) {
         try {
             User newUser = new User();
+            newUser.setId(UUID.randomUUID().toString());
             newUser.setUsername(createUserRequest.getUsername());
             newUser.setEmail(createUserRequest.getEmail());
             newUser.setPasswordHash(new BCryptPasswordEncoder().encode(createUserRequest.getPassword()));
             newUser.setFollowing(new ArrayList<>());
             newUser.getFollowing().add(newUser.getId());
             newUser.setCreatedAt(Instant.now());
-            newUser.setId(UUID.randomUUID().toString());
 
             log.info("User created with id {} at {}", newUser.getId(), newUser.getCreatedAt());
             userRepository.save(newUser);

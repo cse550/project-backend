@@ -60,4 +60,9 @@ public class UserController {
                     .body("User not found.");
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUser(@PathVariable String id) {
+        return ResponseEntity.ok(userService.getUser(id));
+    }
 }
