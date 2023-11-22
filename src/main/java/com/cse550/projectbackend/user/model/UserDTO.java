@@ -11,5 +11,6 @@ public class UserDTO {
     private String username;
     private String email;
     private String passwordHash;
+    private String bio;
     private List<String> following;
 }
