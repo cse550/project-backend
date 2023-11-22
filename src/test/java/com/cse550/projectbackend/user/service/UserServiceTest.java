@@ -51,6 +51,7 @@ class UserServiceTest {
                 .username("updatedUsername")
                 .email("updatedEmail@example.com")
                 .following(Arrays.asList("2", "3"))
+                .bio("this is a bio")
                 .build();
 
         createUserRequest = new CreateUserRequest();
