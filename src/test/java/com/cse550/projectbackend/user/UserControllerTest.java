@@ -28,24 +28,26 @@ public class UserControllerTest {
 
     private User testUser;
 
+    private String token;
+
     @BeforeEach
     void setup() {
         testUser = new User();
         testUser.setId("test");
         testUser.setUsername("test");
         testUser.setPasswordHash("password");
+        token = "test token";
     }
 
     @Test
     public void testCreateUser() {
         CreateUserRequest createUserRequest = new CreateUserRequest();
 
-        when(userService.createUser(any(CreateUserRequest.class))).thenReturn(testUser);
+        when(userService.createUser(any(CreateUserRequest.class))).thenReturn(token);
 
-        ResponseEntity<User> response = userController.createUser(createUserRequest);
+        ResponseEntity<?> response = userController.createUser(createUserRequest);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("test", Objects.requireNonNull(response.getBody()).getId());
 
         verify(userService, times(1)).createUser(any(CreateUserRequest.class));
     }

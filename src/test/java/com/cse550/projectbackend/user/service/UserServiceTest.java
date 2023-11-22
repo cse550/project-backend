@@ -82,14 +82,14 @@ class UserServiceTest {
         when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
         when(userRepository.findById("2")).thenReturn(Optional.of(testFollowedUser));
 
-        List<User> initialFollowingList = new ArrayList<>();
+        List<String> initialFollowingList = new ArrayList<>();
         testUser.setFollowing(initialFollowingList);
 
         User followedUser = userService.followUser("1", "2");
 
         assertNotNull(followedUser);
         assertEquals(1, followedUser.getFollowing().size());
-        assertTrue(followedUser.getFollowing().contains(testFollowedUser));
+        assertTrue(followedUser.getFollowing().contains("2"));
     }
 
 
@@ -106,14 +106,14 @@ class UserServiceTest {
         when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
         when(userRepository.findById("2")).thenReturn(Optional.of(testFollowedUser));
 
-        List<User> initialFollowingList = new ArrayList<>();
-        initialFollowingList.add(testFollowedUser);
+        List<String> initialFollowingList = new ArrayList<>();
+        initialFollowingList.add("2");
         testUser.setFollowing(initialFollowingList);
 
         User followedUser = userService.followUser("1", "2");
 
         assertEquals(1, followedUser.getFollowing().size());
-        assertTrue(followedUser.getFollowing().contains(testFollowedUser));
+        assertTrue(followedUser.getFollowing().contains("2"));
     }
 
     @Test
@@ -140,7 +140,6 @@ class UserServiceTest {
         assertThrows(RuntimeException.class, () -> userService.followUser("1", "2"));
         verify(userRepository, times(1)).save(any(User.class));
     }
-
     @Test
     void testLoginUserWithValidPassword() {
         String password = "testPassword";

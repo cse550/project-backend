@@ -30,6 +30,7 @@ public class PostService {
             post.setPostId(UUID.randomUUID().toString());
             post.setTimestamp(Instant.now());
             post = postRepository.save(post);
+            log.info("Post created at {}", post.getTimestamp());
             return post;
         } catch (DataAccessException e) {
             log.error("Error when creating a new post: ", e);
@@ -55,9 +56,7 @@ public class PostService {
     public List<Post> getFeedPostsByUserId(String userId) {
         User user = userService.getUser(userId);
 
-        List<String> followingIds = user.getFollowing().stream()
-                .map(User::getId)
-                .collect(Collectors.toList());
+        List<String> followingIds = user.getFollowing();
 
         return postRepository.findByUserIdIn(followingIds)
                 .stream()

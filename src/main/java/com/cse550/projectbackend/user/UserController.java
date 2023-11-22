@@ -25,9 +25,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
-        User newUser = userService.createUser(createUserRequest);
-        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+    public ResponseEntity<String> createUser(@RequestBody CreateUserRequest createUserRequest) {
+        String token = userService.createUser(createUserRequest);
+        return new ResponseEntity<>(token, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
@@ -50,11 +50,19 @@ public class UserController {
         try {
             String token = userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword());
             return ResponseEntity.ok(new JwtResponse(token));
-        } catch (BadCredentialsException | UserNotFoundException e) {
+        } catch (BadCredentialsException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getMessage());
+                    .body("Incorrect password.");
+        } catch (UserNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("User not found.");
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUser(@PathVariable String id) {
+        return ResponseEntity.ok(userService.getUser(id));
+    }
 }

@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,18 +28,20 @@ public class UserService {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    public User createUser(CreateUserRequest createUserRequest) {
+    public String createUser(CreateUserRequest createUserRequest) {
         try {
             User newUser = new User();
+            newUser.setId(UUID.randomUUID().toString());
             newUser.setUsername(createUserRequest.getUsername());
             newUser.setEmail(createUserRequest.getEmail());
             newUser.setPasswordHash(new BCryptPasswordEncoder().encode(createUserRequest.getPassword()));
             newUser.setFollowing(new ArrayList<>());
+            newUser.getFollowing().add(newUser.getId());
             newUser.setCreatedAt(Instant.now());
-            newUser.setId(UUID.randomUUID().toString());
 
             log.info("User created with id {} at {}", newUser.getId(), newUser.getCreatedAt());
-            return userRepository.save(newUser);
+            userRepository.save(newUser);
+            return jwtTokenProvider.generateToken(newUser);
         } catch (DataAccessException e) {
             log.error("Error when saving user: ", e);
             throw new RuntimeException("Failed to save user", e);
@@ -81,17 +84,15 @@ public class UserService {
             throw new UserNotFoundException(userId);
         }
 
-        Optional<User> followedUserOptional = userRepository.findById(followedUserId);
-        if (followedUserOptional.isEmpty()) {
+        if (userRepository.findById(followedUserId).isEmpty()) {
             throw new UserNotFoundException("could not find user id of " + followedUserId);
         }
 
         User user = userOptional.get();
-        User followedUser = followedUserOptional.get();
 
-        if (!user.getFollowing().contains(followedUser)) {
-            user.getFollowing().add(followedUser);
-
+        List<String> followingIds = user.getFollowing();
+        if (!followingIds.contains(followedUserId)) {
+            followingIds.add(followedUserId);
             try {
                 userRepository.save(user);
                 return user;
