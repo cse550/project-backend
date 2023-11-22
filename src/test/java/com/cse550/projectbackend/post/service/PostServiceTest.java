@@ -114,7 +114,7 @@ public class PostServiceTest {
         user2.setId("user2Id");
         user2.setFollowing(List.of("user1Id"));
         Post post1 = createPost("post1Id", "user1Id", Instant.now().minusSeconds(10));
-        Post post2 = createPost("post2Id", "user1Id", Instant.now().minusSeconds(5));
+        Post post2 = createPost("post2Id", "user2Id", Instant.now().minusSeconds(5));
 
         Mockito.when(userService.getUser("user2Id")).thenReturn(user2);
         Mockito.when(postRepository.findByUserIdIn(List.of("user1Id"))).thenReturn(Arrays.asList(post1, post2));
