@@ -19,6 +19,7 @@ public class User {
     @Indexed(unique = true)
     private String email;
     private String passwordHash;
+    private String bio;
     private Instant createdAt;
     private List<String> following;
 }

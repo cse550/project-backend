@@ -101,6 +101,9 @@ public class UserService {
                     }
                 }
             }
+            if (userDTO.getBio() != null) {
+                existingUser.setBio(userDTO.getBio());
+            }
 
             userRepository.save(existingUser);
             log.info("User updated with id {}", existingUser.getId());
