@@ -5,6 +5,7 @@ import com.cse550.projectbackend.user.error.BadCredentialsException;
 import com.cse550.projectbackend.user.error.UserNotFoundException;
 import com.cse550.projectbackend.user.model.CreateUserRequest;
 import com.cse550.projectbackend.user.model.User;
+import com.cse550.projectbackend.user.model.UserDTO;
 import com.cse550.projectbackend.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +36,7 @@ class UserServiceTest {
     private UserService userService;
 
     private User testUser;
-    private User testFollowedUser;
+    private UserDTO userDTO;
     private CreateUserRequest createUserRequest;
 
     @BeforeEach
@@ -44,11 +45,13 @@ class UserServiceTest {
         testUser.setId("1");
         testUser.setUsername("user1");
         testUser.setEmail("user1@example.com");
+        testUser.setFollowing(new ArrayList<>());
 
-        testFollowedUser = new User();
-        testFollowedUser.setId("2");
-        testFollowedUser.setUsername("user2");
-        testFollowedUser.setEmail("user2@example.com");
+        userDTO = UserDTO.builder()
+                .username("updatedUsername")
+                .email("updatedEmail@example.com")
+                .following(Arrays.asList("2", "3"))
+                .build();
 
         createUserRequest = new CreateUserRequest();
         createUserRequest.setPassword("testPassword");
@@ -57,118 +60,103 @@ class UserServiceTest {
     }
 
     @Test
-    void testDeleteUserExistingUser() {
+    void testCreateUser() {
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(jwtTokenProvider.generateToken(any(User.class))).thenReturn("mockedToken");
 
-        when(userRepository.findById("testId")).thenReturn(Optional.of(testUser));
+        String token = userService.createUser(createUserRequest);
 
-        userService.deleteUser("testId");
-
-        verify(userRepository, times(1)).findById("testId");
-        verify(userRepository, times(1)).delete(testUser);
+        assertNotNull(token);
+        assertEquals("mockedToken", token);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
-    void testDeleteUserUserNotFound() {
-        when(userRepository.findById("testId")).thenReturn(Optional.empty());
+    void testCreateUserWithException() {
+        when(userRepository.save(any(User.class))).thenThrow(new DataAccessException("Error") {});
 
-        assertThrows(UserNotFoundException.class, () -> userService.deleteUser("testId"));
+        assertThrows(RuntimeException.class, () -> userService.createUser(createUserRequest));
+        verify(userRepository).save(any(User.class));
+    }
 
-        verify(userRepository, times(1)).findById("testId");
+    @Test
+    void testDeleteUser() {
+        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
+
+        assertDoesNotThrow(() -> userService.deleteUser("1"));
+        verify(userRepository).delete(testUser);
+    }
+
+    @Test
+    void testDeleteUserNotFound() {
+        when(userRepository.findById("1")).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.deleteUser("1"));
         verify(userRepository, never()).delete(any(User.class));
     }
 
-    @Test
-    public void testFollowUser() {
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
-        when(userRepository.findById("2")).thenReturn(Optional.of(testFollowedUser));
-
-        List<String> initialFollowingList = new ArrayList<>();
-        testUser.setFollowing(initialFollowingList);
-
-        User followedUser = userService.followUser("1", "2");
-
-        assertNotNull(followedUser);
-        assertEquals(1, followedUser.getFollowing().size());
-        assertTrue(followedUser.getFollowing().contains("2"));
-    }
-
-
-    @Test
-    public void testFollowUserNotFound() {
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
-        when(userRepository.findById("2")).thenReturn(Optional.empty());
-
-        assertThrows(UserNotFoundException.class, () -> userService.followUser("1", "2"));
-    }
-
-    @Test
-    public void testFollowUserAlreadyFollowing() {
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
-        when(userRepository.findById("2")).thenReturn(Optional.of(testFollowedUser));
-
-        List<String> initialFollowingList = new ArrayList<>();
-        initialFollowingList.add("2");
-        testUser.setFollowing(initialFollowingList);
-
-        User followedUser = userService.followUser("1", "2");
-
-        assertEquals(1, followedUser.getFollowing().size());
-        assertTrue(followedUser.getFollowing().contains("2"));
-    }
-
-    @Test
-    void testSaveUserWithDataAccessException() {
-        when(userRepository.save(any(User.class))).thenThrow(new DataAccessException("Error") {});
-        assertThrows(RuntimeException.class, () -> userService.createUser(createUserRequest));
-        verify(userRepository, times(1)).save(any(User.class));
-    }
-
-    @Test
-    void testDeleteUserWithDataAccessException() {
-        when(userRepository.findById("testId")).thenReturn(Optional.of(new User()));
-        doThrow(new DataAccessException("Error") {}).when(userRepository).delete(any(User.class));
-        assertThrows(RuntimeException.class, () -> userService.deleteUser("testId"));
-        verify(userRepository, times(1)).delete(any(User.class));
-    }
-
-    @Test
-    void testFollowUserWithDataAccessException() {
-        testUser.setFollowing(new ArrayList<>());
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
-        when(userRepository.findById("2")).thenReturn(Optional.of(testFollowedUser));
-        doThrow(new DataAccessException("Error") {}).when(userRepository).save(any(User.class));
-        assertThrows(RuntimeException.class, () -> userService.followUser("1", "2"));
-        verify(userRepository, times(1)).save(any(User.class));
-    }
     @Test
     void testLoginUserWithValidPassword() {
         String password = "testPassword";
         String encodedPassword = new BCryptPasswordEncoder().encode(password);
         testUser.setPasswordHash(encodedPassword);
 
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(testUser));
-        when(jwtTokenProvider.generateToken(any(User.class))).thenReturn("mockedJwtToken");
+        when(userRepository.findByUsername("user1")).thenReturn(Optional.of(testUser));
+        when(jwtTokenProvider.generateToken(testUser)).thenReturn("mockedToken");
 
-        String token = userService.loginUser(testUser.getUsername(), password);
+        String token = userService.loginUser("user1", password);
 
         assertNotNull(token);
-
+        assertEquals("mockedToken", token);
     }
-
 
     @Test
-    void testLoginUserWithInvalidPasswordThrowsBadCredentialsException() {
-        String validPassword = "testPassword";
-        String invalidPassword = "wrongPassword";
-        String encodedPassword = new BCryptPasswordEncoder().encode(validPassword);
+    void testLoginUserWithInvalidPassword() {
+        when(userRepository.findByUsername("user1")).thenReturn(Optional.of(testUser));
+        testUser.setPasswordHash(new BCryptPasswordEncoder().encode("testPassword"));
 
-        testUser.setPasswordHash(encodedPassword);
-
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(testUser));
-
-        assertThrows(BadCredentialsException.class, () -> {
-            userService.loginUser(testUser.getUsername(), invalidPassword);
-        });
+        assertThrows(BadCredentialsException.class, () -> userService.loginUser("user1", "wrongPassword"));
     }
 
+    @Test
+    void testLoginUserNotFound() {
+        when(userRepository.findByUsername("user1")).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.loginUser("user1", "testPassword"));
+    }
+
+    @Test
+    void testUpdateUser() {
+        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(jwtTokenProvider.generateToken(any(User.class))).thenReturn("mockedToken");
+
+        String token = userService.updateUser("1", userDTO);
+
+        assertNotNull(token);
+        assertEquals("mockedToken", token);
+        verify(userRepository).save(testUser);
+        assertTrue(testUser.getFollowing().containsAll(Arrays.asList("2", "3")));
+    }
+
+    @Test
+    void testUpdateUserNotFound() {
+        when(userRepository.findById("1")).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser("1", userDTO));
+    }
+
+    @Test
+    void testGetUserOrThrowFound() {
+        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
+
+        assertDoesNotThrow(() -> userService.getUser("1"));
+    }
+
+    @Test
+    void testGetUserOrThrowNotFound() {
+        when(userRepository.findById("1")).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.getUser("1"));
+    }
 }

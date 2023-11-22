@@ -2,6 +2,7 @@ package com.cse550.projectbackend.post.service;
 
 import com.cse550.projectbackend.post.error.PostNotFoundException;
 import com.cse550.projectbackend.post.model.Post;
+import com.cse550.projectbackend.post.model.PostDTO;
 import com.cse550.projectbackend.post.repository.PostRepository;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
@@ -62,6 +63,20 @@ public class PostService {
                 .stream()
                 .sorted(Comparator.comparing(Post::getTimestamp).reversed())
                 .collect(Collectors.toList());
+    }
+
+
+    public Post updatePost(String postId, PostDTO postDTO) {
+       Post post = getPostOrThrow(postId);
+
+        if (postDTO.getContent() != null) {
+            post.setContent(postDTO.getContent());
+        }
+        if (postDTO.getLikeCount() > post.getLikeCount()) {
+            post.setLikeCount(postDTO.getLikeCount());
+        }
+
+        return postRepository.save(post);
     }
 
     private Post getPostOrThrow(String postId) {
