@@ -2,9 +2,8 @@ package com.cse550.projectbackend.post;
 
 import com.cse550.projectbackend.post.error.PostNotFoundException;
 import com.cse550.projectbackend.post.model.Post;
-import com.cse550.projectbackend.user.service.UserService;
+import com.cse550.projectbackend.post.model.PostDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,5 +50,11 @@ public class PostController {
     public ResponseEntity<List<Post>> getUserFeed(@PathVariable String userId) {
         List<Post> feedPosts = postService.getFeedPostsByUserId(userId);
         return ResponseEntity.ok(feedPosts);
+    }
+
+    @PatchMapping("/{postId}")
+    public ResponseEntity<Post> updatePost(@PathVariable String postId, @RequestBody PostDTO postDTO) {
+        Post updatedPost = postService.updatePost(postId, postDTO);
+        return ResponseEntity.ok(updatedPost);
     }
 }

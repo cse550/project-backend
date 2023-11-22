@@ -3,6 +3,7 @@ package com.cse550.projectbackend.user;
 import com.cse550.projectbackend.user.model.CreateUserRequest;
 import com.cse550.projectbackend.user.model.LoginRequest;
 import com.cse550.projectbackend.user.model.User;
+import com.cse550.projectbackend.user.model.UserDTO;
 import com.cse550.projectbackend.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,8 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -53,6 +52,23 @@ public class UserControllerTest {
     }
 
     @Test
+    public void testUpdateUser() {
+        String userId = "1";
+        UserDTO userDTO = UserDTO.builder().build();
+        String expectedResponse = "successToken";
+
+        when(userService.updateUser(eq(userId), any(UserDTO.class))).thenReturn(expectedResponse);
+
+        ResponseEntity<?> response = userController.updateUser(userId, userDTO);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+
+        verify(userService, times(1)).updateUser(eq(userId), any(UserDTO.class));
+    }
+
+
+    @Test
     public void testDeleteUser() {
 
         doNothing().when(userService).deleteUser(testUser.getId());
@@ -64,17 +80,6 @@ public class UserControllerTest {
         verify(userService, times(1)).deleteUser(testUser.getId());
     }
 
-    @Test
-    public void testFollowUser() {
-
-        when(userService.followUser(anyString(), anyString())).thenReturn(testUser);
-
-        ResponseEntity<User> response = userController.followUser("test", "followedUserId");
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("test", Objects.requireNonNull(response.getBody()).getId());
-        verify(userService, times(1)).followUser("test", "followedUserId");
-    }
 
     @Test
     public void testLoginUser() {

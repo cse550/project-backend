@@ -6,6 +6,7 @@ import com.cse550.projectbackend.user.error.UserNotFoundException;
 import com.cse550.projectbackend.user.model.CreateUserRequest;
 import com.cse550.projectbackend.user.model.LoginRequest;
 import com.cse550.projectbackend.user.model.User;
+import com.cse550.projectbackend.user.model.UserDTO;
 import com.cse550.projectbackend.user.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,15 +37,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{userId}/follow/{followedUserId}")
-    public ResponseEntity<User> followUser(
-            @PathVariable String userId,
-            @PathVariable String followedUserId
-    ) {
-        User user = userService.followUser(userId, followedUserId);
-        return new ResponseEntity<>(user, HttpStatus.OK);
-    }
-
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
         try {
@@ -64,5 +56,10 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable String id) {
         return ResponseEntity.ok(userService.getUser(id));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody UserDTO userDTO) {
+        return ResponseEntity.ok(userService.updateUser(id, userDTO));
     }
 }

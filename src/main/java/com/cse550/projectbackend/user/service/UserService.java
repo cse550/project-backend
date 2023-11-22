@@ -5,6 +5,7 @@ import com.cse550.projectbackend.user.error.BadCredentialsException;
 import com.cse550.projectbackend.user.error.UserNotFoundException;
 import com.cse550.projectbackend.user.model.CreateUserRequest;
 import com.cse550.projectbackend.user.model.User;
+import com.cse550.projectbackend.user.model.UserDTO;
 import com.cse550.projectbackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,8 +68,7 @@ public class UserService {
     }
 
     public String loginUser(String username, String password) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("could not find username of " + username));
+        User user = getUserOrThrow(username);
 
         if (new BCryptPasswordEncoder().matches(password, user.getPasswordHash())) {
             return jwtTokenProvider.generateToken(user);
@@ -78,44 +77,47 @@ public class UserService {
         }
     }
 
-    public User followUser(String userId, String followedUserId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
-            throw new UserNotFoundException(userId);
-        }
-
-        if (userRepository.findById(followedUserId).isEmpty()) {
-            throw new UserNotFoundException("could not find user id of " + followedUserId);
-        }
-
-        User user = userOptional.get();
-
-        List<String> followingIds = user.getFollowing();
-        if (!followingIds.contains(followedUserId)) {
-            followingIds.add(followedUserId);
-            try {
-                userRepository.save(user);
-                return user;
-            } catch (DataAccessException e) {
-                log.error("Error when following user with id {}: ", followedUserId, e);
-                throw new RuntimeException("Failed to follow user", e);
-            }
-        }
-        return user;
-    }
-
     public User getUser(String identifier) {
-        Optional<User> userOptional = userRepository.findByUsername(identifier);
-
-        if (userOptional.isEmpty()) {
-            userOptional = userRepository.findById(identifier);
-        }
-
-        if (userOptional.isEmpty()) {
-            throw new UserNotFoundException("Could not find user with identifier: " + identifier);
-        }
-
-        return userOptional.get();
+        return getUserOrThrow(identifier);
     }
 
+    public String updateUser(String userId, UserDTO userDTO) {
+        try {
+            User existingUser = getUserOrThrow(userId);
+
+            if (userDTO.getUsername() != null) {
+                existingUser.setUsername(userDTO.getUsername());
+            }
+            if (userDTO.getEmail() != null) {
+                existingUser.setEmail(userDTO.getEmail());
+            }
+            if (userDTO.getPasswordHash() != null) {
+                existingUser.setPasswordHash(new BCryptPasswordEncoder().encode(userDTO.getPasswordHash()));
+            }
+            if (userDTO.getFollowing() != null) {
+                for (String followingId : userDTO.getFollowing()) {
+                    if (!existingUser.getFollowing().contains(followingId)) {
+                        existingUser.getFollowing().add(followingId);
+                    }
+                }
+            }
+
+            userRepository.save(existingUser);
+            log.info("User updated with id {}", existingUser.getId());
+
+            return jwtTokenProvider.generateToken(existingUser);
+        } catch (DataAccessException e) {
+            log.error("Error when updating user: ", e);
+            throw new UserNotFoundException("could not find user id of " + userId);
+        }
+    }
+
+    private User getUserOrThrow(String identifier) {
+        return userRepository.findById(identifier)
+                .or(() -> userRepository.findByUsername(identifier))
+                .orElseThrow(() -> {
+                    log.error("User with identifier {} not found", identifier);
+                    return new UserNotFoundException("Could not find user with identifier: " + identifier);
+                });
+    }
 }

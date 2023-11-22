@@ -2,6 +2,7 @@ package com.cse550.projectbackend.post.service;
 
 import com.cse550.projectbackend.post.error.PostNotFoundException;
 import com.cse550.projectbackend.post.model.Post;
+import com.cse550.projectbackend.post.model.PostDTO;
 import com.cse550.projectbackend.post.repository.PostRepository;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
@@ -19,7 +20,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
@@ -109,10 +112,9 @@ public class PostServiceTest {
     public void getFeedPostsByUserIdTest() {
         User user2 = new User();
         user2.setId("user2Id");
-        user2.setFollowing(List.of("user1Id")); // Assuming 'following' is a list of user IDs
-
+        user2.setFollowing(List.of("user1Id"));
         Post post1 = createPost("post1Id", "user1Id", Instant.now().minusSeconds(10));
-        Post post2 = createPost("post2Id", "user1Id", Instant.now().minusSeconds(5));
+        Post post2 = createPost("post2Id", "user2Id", Instant.now().minusSeconds(5));
 
         Mockito.when(userService.getUser("user2Id")).thenReturn(user2);
         Mockito.when(postRepository.findByUserIdIn(List.of("user1Id"))).thenReturn(Arrays.asList(post1, post2));
@@ -129,5 +131,30 @@ public class PostServiceTest {
         post.setUserId(userId);
         post.setTimestamp(timestamp);
         return post;
+    }
+
+    @Test
+    public void testUpdatePost() {
+        PostDTO postDTO = PostDTO.builder().build();
+        postDTO.setContent("Updated content");
+        postDTO.setLikeCount(10);
+
+        Mockito.when(postRepository.findById("1")).thenReturn(Optional.of(testPost));
+        Mockito.when(postRepository.save(any(Post.class))).then(returnsFirstArg());
+
+        Post updatedPost = postService.updatePost("1", postDTO);
+
+        assertNotNull(updatedPost);
+        assertEquals("Updated content", updatedPost.getContent());
+        assertEquals(10, updatedPost.getLikeCount());
+        verify(postRepository).save(testPost);
+    }
+
+    @Test
+    public void testUpdatePostNotFound() {
+        PostDTO postDTO = PostDTO.builder().build();
+        Mockito.when(postRepository.findById("2")).thenReturn(Optional.empty());
+
+        assertThrows(PostNotFoundException.class, () -> postService.updatePost("2", postDTO));
     }
 }
