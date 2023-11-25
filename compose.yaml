@@ -20,7 +20,7 @@ services:
 
 
   spring-boot-app:
-    image: project-backend
+    image: project-backend:${PROJECT_BACKEND_TAG-latest}
     container_name: spring-boot-app
     build:
       context: .
