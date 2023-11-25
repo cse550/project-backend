@@ -11,14 +11,28 @@ services:
       - "27017:27017"
     networks:
       - mynetwork
+    healthcheck:
+      test: echo exit | mongosh || exit 1
+      interval: 5s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
 
   spring-boot-app:
     image: project-backend
     container_name: spring-boot-app
+    build:
+      context: .
+      tags:
+        - "spring-boot-app:latest"
+    restart: always
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://root:examplepassword@mongodb:27017/database
+      JWT_SECRET: ${JWT_SECRET-test}
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     ports:
       - "8080:8080"
     networks:
