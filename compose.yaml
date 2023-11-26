@@ -25,7 +25,7 @@ services:
     build:
       context: .
       tags:
-        - "spring-boot-app:latest"
+        - "project-backend:latest"
     restart: always
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://root:examplepassword@mongodb:27017/database
