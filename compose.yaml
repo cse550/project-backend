@@ -10,7 +10,7 @@ services:
     ports:
       - "27017:27017"
     networks:
-      - mynetwork
+      - lol-app-network
     healthcheck:
       test: echo exit | mongosh || exit 1
       interval: 5s
@@ -36,9 +36,10 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - mynetwork
+      lol-app-network:
+        aliases:
+          - backend
 
 networks:
-  mynetwork:
-    driver: bridge
+  lol-app-network:
 
