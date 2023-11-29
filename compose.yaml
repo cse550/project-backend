@@ -29,7 +29,8 @@ services:
     restart: always
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://root:password@mongodb:27017/admin
-      JWT_SECRET: ${JWT_SECRET-test}
+      # must be 256 bits long
+      JWT_SECRET: ${JWT_SECRET-testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest}
     depends_on:
       mongodb:
         condition: service_healthy
