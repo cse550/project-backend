@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -112,6 +113,15 @@ public class UserService {
         } catch (DataAccessException e) {
             log.error("Error when updating user: ", e);
             throw new UserNotFoundException("could not find user id of " + userId);
+        }
+    }
+
+    public List<User> getUsers() {
+        List<User> allUsers = userRepository.findAll();
+        if (allUsers.size() > 10) {
+            return allUsers.subList(0, 10);
+        } else {
+            return allUsers;
         }
     }
 

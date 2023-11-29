@@ -18,7 +18,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,10 +44,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        testUser = new User();
-        testUser.setId("1");
-        testUser.setUsername("user1");
-        testUser.setEmail("user1@example.com");
+        testUser = createUser("1", "user1", "user1@example.com");
         testUser.setFollowing(new ArrayList<>());
 
         userDTO = UserDTO.builder()
@@ -146,7 +146,32 @@ class UserServiceTest {
 
         assertThrows(UserNotFoundException.class, () -> userService.updateUser("1", userDTO));
     }
+    @Test
+    void getUsersWhenMoreThan10UsersReturnsFirst10Users() {
+        List<User> mockUsers = IntStream.range(0, 15)
+                .mapToObj(i -> createUser(String.valueOf(i), "User" + i, "email" + i + "@example.com"))
+                .collect(Collectors.toList());
+        when(userRepository.findAll()).thenReturn(mockUsers);
+        List<User> users = userService.getUsers();
 
+        assertEquals(10, users.size());
+        for (int i = 0; i < 10; i++) {
+            assertEquals("User" + i, users.get(i).getUsername());
+        }
+    }
+
+    @Test
+    void getUsersWhenLessThan10UsersReturnsAllUsers() {
+        List<User> mockUsers = IntStream.range(0, 5)
+                .mapToObj(i -> createUser(String.valueOf(i), "User" + i, "email" + i + "@example.com"))
+                .collect(Collectors.toList());
+        when(userRepository.findAll()).thenReturn(mockUsers);
+        List<User> users = userService.getUsers();
+        assertEquals(5, users.size());
+        for (int i = 0; i < 5; i++) {
+            assertEquals("User" + i, users.get(i).getUsername());
+        }
+    }
     @Test
     void testGetUserOrThrowFound() {
         when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
@@ -159,5 +184,13 @@ class UserServiceTest {
         when(userRepository.findById("1")).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getUser("1"));
+    }
+
+    private User createUser(String id, String username, String email) {
+        User user = new User();
+        user.setId(id);
+        user.setUsername(username);
+        user.setEmail(email);
+        return user;
     }
 }
