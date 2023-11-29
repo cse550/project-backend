@@ -28,7 +28,7 @@ services:
         - "project-backend:latest"
     restart: always
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://root:examplepassword@mongodb:27017/database
+      SPRING_DATA_MONGODB_URI: mongodb://root:password@mongodb:27017/database
       JWT_SECRET: ${JWT_SECRET-test}
     depends_on:
       mongodb:
