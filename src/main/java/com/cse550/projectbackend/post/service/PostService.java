@@ -30,6 +30,7 @@ public class PostService {
         try {
             post.setPostId(UUID.randomUUID().toString());
             post.setTimestamp(Instant.now());
+            post.setUsername(post.getUsername());
             post = postRepository.save(post);
             log.info("Post created at {}", post.getTimestamp());
             return post;
