@@ -2,6 +2,7 @@ package com.cse550.projectbackend.post.service;
 
 import com.cse550.projectbackend.post.error.PostNotFoundException;
 import com.cse550.projectbackend.post.model.Post;
+import com.cse550.projectbackend.post.model.PostDTO;
 import com.cse550.projectbackend.post.repository.PostRepository;
 import com.cse550.projectbackend.user.model.User;
 import com.cse550.projectbackend.user.service.UserService;
@@ -29,7 +30,9 @@ public class PostService {
         try {
             post.setPostId(UUID.randomUUID().toString());
             post.setTimestamp(Instant.now());
+            post.setUsername(post.getUsername());
             post = postRepository.save(post);
+            log.info("Post created at {}", post.getTimestamp());
             return post;
         } catch (DataAccessException e) {
             log.error("Error when creating a new post: ", e);
@@ -55,14 +58,26 @@ public class PostService {
     public List<Post> getFeedPostsByUserId(String userId) {
         User user = userService.getUser(userId);
 
-        List<String> followingIds = user.getFollowing().stream()
-                .map(User::getUserId)
-                .collect(Collectors.toList());
+        List<String> followingIds = user.getFollowing();
 
         return postRepository.findByUserIdIn(followingIds)
                 .stream()
                 .sorted(Comparator.comparing(Post::getTimestamp).reversed())
                 .collect(Collectors.toList());
+    }
+
+
+    public Post updatePost(String postId, PostDTO postDTO) {
+       Post post = getPostOrThrow(postId);
+
+        if (postDTO.getContent() != null) {
+            post.setContent(postDTO.getContent());
+        }
+        if (postDTO.getLikeCount() > post.getLikeCount()) {
+            post.setLikeCount(postDTO.getLikeCount());
+        }
+
+        return postRepository.save(post);
     }
 
     private Post getPostOrThrow(String postId) {

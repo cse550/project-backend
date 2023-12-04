@@ -1,73 +1,100 @@
 package com.cse550.projectbackend.user;
 
+import com.cse550.projectbackend.user.model.CreateUserRequest;
+import com.cse550.projectbackend.user.model.LoginRequest;
 import com.cse550.projectbackend.user.model.User;
+import com.cse550.projectbackend.user.model.UserDTO;
 import com.cse550.projectbackend.user.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(UserController.class)
+@ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private UserService userService;
+    @InjectMocks
+    private UserController userController;
+
+    private User testUser;
+
+    private String token;
+
+    @BeforeEach
+    void setup() {
+        testUser = new User();
+        testUser.setId("test");
+        testUser.setUsername("test");
+        testUser.setPasswordHash("password");
+        token = "test token";
+    }
 
     @Test
-    public void testCreateUser() throws Exception {
-        User user = new User();
-        user.setUserId("testId");
+    public void testCreateUser() {
+        CreateUserRequest createUserRequest = new CreateUserRequest();
 
-        when(userService.saveUser(any(User.class))).thenReturn(user);
+        when(userService.createUser(any(CreateUserRequest.class))).thenReturn(token);
 
-        mockMvc.perform(post("/user")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userId").value("testId"));
+        ResponseEntity<?> response = userController.createUser(createUserRequest);
 
-        verify(userService, times(1)).saveUser(any(User.class));
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
+        verify(userService, times(1)).createUser(any(CreateUserRequest.class));
+    }
+
+    @Test
+    public void testUpdateUser() {
+        String userId = "1";
+        UserDTO userDTO = UserDTO.builder().build();
+        String expectedResponse = "successToken";
+
+        when(userService.updateUser(eq(userId), any(UserDTO.class))).thenReturn(expectedResponse);
+
+        ResponseEntity<?> response = userController.updateUser(userId, userDTO);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+
+        verify(userService, times(1)).updateUser(eq(userId), any(UserDTO.class));
     }
 
 
     @Test
-    public void testDeleteUser() throws Exception {
-        String existingUserId = "testId";
+    public void testDeleteUser() {
 
-        doNothing().when(userService).deleteUser(existingUserId);
+        doNothing().when(userService).deleteUser(testUser.getId());
 
-        mockMvc.perform(delete("/user/{id}", existingUserId))
-                .andExpect(status().isNoContent());
+        ResponseEntity<Void> response = userController.deleteUser(testUser.getId());
 
-        verify(userService, times(1)).deleteUser(existingUserId);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        verify(userService, times(1)).deleteUser(testUser.getId());
     }
-
 
 
     @Test
-    public void testGetUser() throws Exception {
-        User user = new User();
-        user.setUserId("testId");
+    public void testLoginUser() {
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername("user");
+        loginRequest.setPassword("password");
 
-        when(userService.getUser("testId")).thenReturn(user);
+        String mockToken = "mockJwtToken";
+        when(userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword())).thenReturn(mockToken);
 
-        mockMvc.perform(get("/user/testId"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value("testId"));
+        ResponseEntity<?> response = userController.loginUser(loginRequest);
 
-        verify(userService, times(1)).getUser("testId");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        verify(userService, times(1)).loginUser(loginRequest.getUsername(), loginRequest.getPassword());
     }
-
 }
